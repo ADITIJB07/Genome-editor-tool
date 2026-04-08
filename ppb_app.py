@@ -24,7 +24,7 @@ st.markdown(f"""
     position: fixed;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.65);
+    background: rgba(0,0,0,0.6);
     z-index: -1;
 }}
 
@@ -34,23 +34,12 @@ h1, h2, h3, h4, label, p {{
 
 li {{
     color: white !important;
-    font-size: 16px;
 }}
 
 textarea, input {{
     color: black !important;
 }}
 
-/* ✅ FIX DROPDOWN TEXT */
-div[data-baseweb="select"] span {{
-    color: black !important;
-}}
-
-div[role="option"] {{
-    color: black !important;
-}}
-
-/* BUTTON */
 .stButton>button {{
     background-color: red;
     color: white;
@@ -147,12 +136,9 @@ def fallback_structure(pos):
 
 st.title("Genome Editor Tool")
 
-# ---------------------- ABOUT ----------------------
-
 with st.expander("About Tool"):
     st.write("""
-This tool allows users to perform genome editing by introducing point mutations 
-in a DNA sequence.
+This tool allows users to perform genome editing by introducing point mutations in a DNA sequence. It translates the mutated DNA into protein, calculates GC content, and predicts the 3D protein structure using AI-based modeling.
 
 Features:
 - DNA mutation simulation
@@ -167,7 +153,7 @@ Features:
 
 seq = st.text_area("Enter DNA Sequence").upper()
 position = st.number_input("Position to Mutate (1-based)", min_value=1)
-new_base = st.selectbox("New Base", ["A", "T", "G", "C"])
+new_base = st.text_input("Enter New Base (A/T/G/C)").upper()
 
 # ---------------------- ACTION ----------------------
 
@@ -178,6 +164,9 @@ if st.button("Apply Mutation"):
 
     elif position > len(seq):
         st.warning("Invalid position")
+
+    elif new_base not in ["A", "T", "G", "C"]:
+        st.warning("Invalid base (Enter A, T, G, or C)")
 
     else:
         mutated_seq = list(seq)
@@ -194,7 +183,6 @@ if st.button("Apply Mutation"):
         st.subheader("GC Content")
         st.write(gc_content(mutated_seq))
 
-        # ✅ Mutation type
         st.subheader("Mutation Type")
         mutation_type = classify_mutation(seq, mutated_seq, position)
         st.write(mutation_type)
@@ -203,17 +191,13 @@ if st.button("Apply Mutation"):
 
         protein_pos = (position - 1) // 3 + 1
 
-        if len(protein) < 30:
-            st.warning("Protein too short → showing default structure")
-            html = fallback_structure(protein_pos)
-        else:
-            with st.spinner("Predicting structure..."):
-                pdb = predict_structure(protein)
+        with st.spinner("Predicting structure..."):
+            pdb = predict_structure(protein)
 
-            if pdb:
-                html = show_structure(pdb, protein_pos)
-            else:
-                st.warning("Prediction failed → showing default structure")
-                html = fallback_structure(protein_pos)
+        if pdb:
+            html = show_structure(pdb, protein_pos)
+        else:
+            st.warning("Prediction failed → showing default structure")
+            html = fallback_structure(protein_pos)
 
         st.components.v1.html(html, height=400)
