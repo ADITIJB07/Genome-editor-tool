@@ -191,6 +191,17 @@ if st.button("Apply Mutation"):
 
         protein_pos = (position - 1) // 3 + 1
 
+        if len(protein) < 15:
+            st.warning("Protein sequence too short for reliable 3D prediction")
+        else:
+             with st.spinner("Predicting structure..."):
+                 pdb = predict_structure(protein)
+             if pdb:
+                 html = show_structure(pdb, protein_pos)
+                 st.components.v1.html(html, height=400)
+             else:
+                 st.error("Structure prediction failed (API issue or invalid sequence)")
+
         with st.spinner("Predicting structure..."):
             pdb = predict_structure(protein)
 
