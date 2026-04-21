@@ -199,17 +199,19 @@ if st.button("Apply Mutation"):
             html = show_structure(pdb, protein_pos)
     
         else:
-            html = fallback...
-        if len(protein) < 50:
-            fallback_id = "1CRN"   # small protein
-        elif len(protein) < 150:
-            allback_id = "2PTC"   # medium protein
-        else:
-            fallback_id = "1BNA"   # larger structure
+             # Smart fallback based on protein length
+            if len(protein) < 50:
+                fallback_id = "1CRN"   # small protein
+            elif len(protein) < 150:
+                fallback_id = "2PTC"   # medium protein
+            else:
+                fallback_id = "1BNA"   # larger structure
 
         view = py3Dmol.view(query='pdb:' + fallback_id)
         view.setStyle({'cartoon': {'color': 'spectrum'}})
         view.addStyle({'resi': protein_pos}, {'stick': {'color': 'red'}})
         view.zoomTo()
 
-        st.components.v1.html(html, height=400)
+        html = view._make_html()
+
+    st.components.v1.html(html, height=400)
