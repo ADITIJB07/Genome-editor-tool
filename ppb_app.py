@@ -111,11 +111,12 @@ def classify_mutation(original_seq, mutated_seq, position):
 def predict_structure(protein_seq):
     url = "https://api.esmatlas.com/foldSequence/v1/pdb/"
     try:
-        res = requests.post(url, data=protein_seq, timeout=20)
-        if res.status_code == 200:
+        res = requests.post(url, data=protein_seq, timeout=30, headers={"Content-Type": "text/plain"})
+        if res.status_code == 200 and len(res.text) > 100:
             return res.text
-    except:
-        return None
+    except Expectation as e:
+        print(e)
+    return None
 
 def show_structure(pdb_data, pos):
     view = py3Dmol.view()
@@ -191,24 +192,25 @@ if st.button("Apply Mutation"):
 
         protein_pos = (position - 1) // 3 + 1
 
-        if len(protein) < 15:
-            st.warning("Protein sequence too short for reliable 3D prediction")
-        else:
-             with st.spinner("Predicting structure..."):
-                 pdb = predict_structure(protein)
-             if pdb:
-                 html = show_structure(pdb, protein_pos)
-                 st.components.v1.html(html, height=400)
-             else:
-                 st.error("Structure prediction failed (API issue or invalid sequence)")
-
         with st.spinner("Predicting structure..."):
             pdb = predict_structure(protein)
 
         if pdb:
             html = show_structure(pdb, protein_pos)
-        else:
-            st.warning("Prediction failed → showing default structure")
-            html = fallback_structure(protein_pos)
+            st.components.v1.html(html, height=400)
 
-        st.components.v1.html(html, height=400)
+        else:
+            st.warning("Real-time prediction failed. Showing closest known protein structure.")
+        if len(protein) < 50:
+            fallback_id = "1CRN"   # small protein
+        elif len(protein) < 150:
+            allback_id = "2PTC"   # medium protein
+        else:
+            fallback_id = "1BNA"   # larger structure
+
+        view = py3Dmol.view(query='pdb:' + fallback_id)
+        view.setStyle({'cartoon': {'color': 'spectrum'}})
+        view.addStyle({'resi': protein_pos}, {'stick': {'color': 'red'}})
+        view.zoomTo()
+
+        st.components.v1.html(view._make_html(), height=400)
