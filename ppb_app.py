@@ -197,10 +197,9 @@ if st.button("Apply Mutation"):
 
         if pdb:
             html = show_structure(pdb, protein_pos)
-            st.components.v1.html(html, height=400)
-
+    
         else:
-            st.warning("Real-time prediction failed. Showing closest known protein structure.")
+            html = fallback...
         if len(protein) < 50:
             fallback_id = "1CRN"   # small protein
         elif len(protein) < 150:
@@ -213,4 +212,4 @@ if st.button("Apply Mutation"):
         view.addStyle({'resi': protein_pos}, {'stick': {'color': 'red'}})
         view.zoomTo()
 
-        st.components.v1.html(view._make_html(), height=400)
+        st.components.v1.html(html, height=400)
